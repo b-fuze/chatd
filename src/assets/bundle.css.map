@@ -1,0 +1,12 @@
+{
+  "version": 3,
+  "file": "bundle.css",
+  "sources": [
+    "../app/App.html"
+  ],
+  "sourcesContent": [
+    "<script>\n\timport './app.scss'\n\n\texport let messages = [\n\t\t// {\n\t\t// \tmessage: \"\",\n\t\t// \tusername: \"\",\n\t\t// }\n\t]\n\tlet curMessage = \"\"\n\n\tfunction postMessage() {\n\t\tmessages = messages.concat({\n\t\t\tmessage: curMessage,\n\t\t\tname: \"Azuga\",\n\t\t})\n\n\t\tcurMessage = \"\"\n\t}\n</script>\n\n<style type=\"text/scss\">.messages {\n  display: flex;\n  width: 450px;\n  height: 600px; }\n</style>\n\n<div class=\"chrome\">\n\t<div class=\"messages\">\n\t\t{#each messages as msg}\n\t\t\t<div class=\"message\">\n\t\t\t\t<span class=\"name\">{msg.name}:</span> <span class=\"message-body\">{msg.message}</span>\n\t\t\t</div>\n\t\t{/each}\n\t</div>\n\t<div class=\"post\">\n\t\t<input\n\t\t  type=\"text\"\n\t\t\tclass=\"message-input\"\n\t\t\tbind:value={curMessage}>\n\t\t<button\n\t\t\tclass=\"post\"\n\t\t\ton:click={postMessage}>Post</button>\n\t</div>\n</div>\n"
+  ],
+  "names": [],
+  "mappings": "AAqBwB,SAAS,eAAC,CAAC,AACjC,OAAO,CAAE,IAAI,CACb,KAAK,CAAE,KAAK,CACZ,MAAM,CAAE,KAAK,AAAE,CAAC"
+}
