@@ -1,0 +1,106 @@
+<script>
+	import { afterUpdate } from "svelte"
+  import { get } from "svelte/store"
+  import { messages, room, socket } from "../globals.js"
+	import { deleteMessage } from "../actions.js"
+
+  let messageCount = get(messages).length
+  let newMessageCount = messageCount
+	let messagesWrap
+	let autoscroll = true
+
+	function checkShouldScroll() {
+		if (messagesWrap) {
+			const { scrollHeight, scrollTop, offsetHeight } = messagesWrap
+
+			// Check if already scrolled to the bottom (and keep doing it)
+			autoscroll = (scrollHeight - offsetHeight) - scrollTop === 0
+		}
+	}
+
+  messages.subscribe((messages) => {
+    newMessageCount = messages.length
+    checkShouldScroll()
+  })
+
+	afterUpdate(() => {
+		// Keep scrolled to the bottom
+		if (messagesWrap && autoscroll && newMessageCount !== messageCount) {
+			const { scrollHeight } = messagesWrap
+			messagesWrap.scrollTop = scrollHeight
+		}
+
+    messageCount = newMessageCount
+	})
+
+</script>
+
+<style type="text/scss">
+  $nothing: here;
+
+	.messages {
+		flex: 1 1 auto;
+		overflow: auto;
+
+		.message {
+			display: flex;
+			flex-flow: row nowrap;
+			align-items: center;
+			padding: 1rem;
+
+			&:not(:last-child) {
+				border-bottom: 1px solid #eee;
+			}
+
+			.text {
+				flex: 1 1 auto;
+
+				.name {
+					color: #9F00FF;
+					font-weight: bold;
+				}
+
+				.message-body {
+					color: #222;
+				}
+			}
+
+			.actions {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 40px;
+				height: 40px;
+				flex: 0 0 auto;
+
+				button {
+					font-size: 2rem;
+					color: #aaa;
+					border: 0;
+					background: transparent;
+
+					cursor: pointer;
+				}
+			}
+		}
+	}
+</style>
+
+<div
+	class="messages"
+	bind:this={messagesWrap}>
+	{#each $messages as msg}
+		<div class="message">
+			<div class="text">
+				<span class="name">{msg.username}:</span> <span class="message-body">{msg.message}</span>
+			</div>
+			<div class="actions">
+				{#if msg.id !== -1 && $socket.socketId === msg.clientId}
+					<button
+					  class="delete"
+						on:click={() => deleteMessage($room, msg.id)}>×</button>
+				{/if}
+			</div>
+		</div>
+	{/each}
+</div>

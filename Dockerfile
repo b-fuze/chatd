@@ -6,12 +6,15 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install npm deps
-RUN npm i
+RUN npm i \
+  && mkdir -p src/assets \
+  && cp node_modules/socket.io-client/dist/socket.io.js src/assets/
+
 RUN npm i -g nodemon
 
 COPY . .
 
-RUN npm build
+RUN npm run build
 
 # Expose 80 port
 EXPOSE 80

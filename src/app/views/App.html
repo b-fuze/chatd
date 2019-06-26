@@ -1,0 +1,268 @@
+<script>
+	import "./app.scss"
+	import { afterUpdate } from "svelte"
+	import { get } from "svelte/store"
+	import { messages, user, socket } from "../globals.js"
+	import { postMessage as postServerMessage } from "../actions.js"
+
+	// Sub components
+	import Logo from "./Logo.html"
+	import MessagesList from "./MessageList.html"
+
+	let curMessage = ""
+	// let curAttachments = [{
+	// 	id: "",
+	// 	type: "file",
+	// 	name: "virus.exe",
+	// 	size: 113131,
+	// }, {
+	// 	id: "",
+	// 	type: "file",
+	// 	name: "cool-things.png",
+	// 	size: 41141,
+	// }]
+	let curAttachments = []
+	let currentFileFormData = new FormData()
+	let fileInput
+	let fileInputForm
+	const nickCommand = "/nick "
+
+	function postMessage() {
+		if (curMessage.trim()) {
+			const username = get(user).name
+
+			if (curMessage.slice(0, nickCommand.length) === nickCommand) {
+				// Just change the nick
+				user.update(u => ({
+					...u,
+					name: curMessage.slice(nickCommand.length),
+				}))
+			} else {
+				// Post a message
+				postServerMessage({
+					id: -1,
+					username,
+					message: curMessage,
+					attachments: [],
+				})
+			}
+
+			curMessage = ""
+		}
+	}
+
+	function addAttachments() {
+		fileInput && fileInput.click()
+	}
+
+	function listNewAttachment() {
+		const files = Array.from(fileInput.files)
+
+		for (const file of files) {
+			curAttachments.push({
+				id: "",
+				type: "file",
+				// @ts-ignore
+				name: file.name,
+				// @ts-ignore
+				size: file.size,
+			})
+
+			// @ts-ignore
+			currentFileFormData.append("attachments[]", file)
+		}
+
+		curAttachments = curAttachments
+		fileInputForm.reset()
+	}
+
+	function removeAttachment(index) {
+		curAttachments.splice(index, 1)
+		curAttachments = curAttachments
+	}
+</script>
+
+<style type="text/scss">
+	$nothing: here;
+
+	.logo {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 2rem;
+	}
+
+	.messages-view {
+		display: flex;
+		flex-flow: column;
+		width: 450px;
+		height: 500px;
+		overflow: hidden;
+
+		background: #fff;
+		border-radius: 5px;
+		box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+
+		$attachments-size: 60px;
+
+		.attachment-shelf {
+			position: relative;
+			display: flex;
+			height: 0;
+			width: 100%;
+			flex: 0 0 auto;
+			flex-flow: row nowrap;
+			overflow-x: auto;
+			overflow-y: hidden;
+			align-items: center;
+			padding: 0rem 0.5rem;
+			box-sizing: border-box;
+
+			background: #AAA;
+			transition: height 200ms ease;
+
+			&.is-visible {
+				height: calc(1rem + #{$attachments-size});
+			}
+
+			.attachment-count {
+				position: absolute;
+				bottom: 0px;
+				right: 0.25rem;
+				height: 1rem;
+
+				line-height: 1rem;
+				font-size: 0.65rem;
+				color: #fff;
+			}
+
+			.attachment {
+				display: flex;
+				padding: 0 0.5rem;
+				align-items: center;
+				margin: 0 0.5rem;
+				height: $attachments-size - 20px;
+				box-sizing: border-box;
+				flex: 0 0 auto;
+
+				border-radius: 4px;
+				background: #fff;
+
+				.name {
+					color: #666;
+					font-size: 0.8rem;
+				}
+
+				$remove-size: 20px;
+				.remove {
+					border: 0;
+					padding: 0;
+					margin: 0;
+					width: $remove-size;
+					height: $remove-size;
+					margin-left: 0.5rem;
+
+					border-radius: 100%;
+					background: #006BFF;
+					color: #fff;
+
+					cursor: pointer;
+				}
+			}
+		}
+
+		$post-size: 50px;
+
+		.post {
+			position: relative;
+			z-index: 10;
+			display: flex;
+			flex-flow: row;
+			flex: 0 0 auto;
+			height: $post-size;
+
+			border-top: 1px solid #ddd;
+
+			.message-input {
+				height: 100%;
+				flex: 1 1 auto;
+				box-sizing: border-box;
+
+				padding: 1rem;
+				border: 0;
+			}
+
+			.submit,
+			.add-attachment {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 100px;
+				height: 100%;
+				flex: 0 0 auto;
+
+				color: #fff;
+				border: 0;
+				background: #006BFF;
+			}
+
+			.add-attachment {
+				width: $post-size;
+
+				font-weight: bold;
+				font-size: 1.5rem;
+			}
+		}
+	}
+
+	.hidden {
+		display: none;
+	}
+</style>
+
+<div class="logo">
+	<Logo width={150} />
+</div>
+
+<div class="messages-view">
+	<MessagesList />
+
+	<div
+		class="attachment-shelf"
+		class:is-visible="{curAttachments.length}">
+		<div class="attachment-count">{curAttachments.length} attachments</div>
+		{#each curAttachments as attachment, index}
+			<div class="attachment">
+				<div class="name">{attachment.name}</div>
+				<button
+					class="remove"
+					on:click={() => removeAttachment(index)}>×</button>
+			</div>
+		{/each}
+	</div>
+
+	<div class="post">
+		<button
+			class="add-attachment"
+			on:click={addAttachments}>+</button>
+		<input
+		  type="text"
+			class="message-input"
+			placeholder="Message... Or /nick New Nick"
+			bind:value={curMessage}
+			on:keyup={() => (event.keyCode === 13 && postMessage())}>
+		<button
+			class="submit"
+			on:click={postMessage}>Post</button>
+	</div>
+</div>
+
+<div class="hidden">
+	<form
+		bind:this={fileInputForm}>
+		<input
+			type="file"
+			bind:this={fileInput}
+			on:change={listNewAttachment}
+			multiple />
+	</form>
+</div>
