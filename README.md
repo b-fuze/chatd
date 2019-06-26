@@ -2,7 +2,7 @@
 
 Chatd's source
 
-<center>
+<p align="center">
   <img src="misc/screenshot.png" alt="Screenshot of Chatd">
-</center>
+</p>
 
