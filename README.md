@@ -2,7 +2,5 @@
 
 Chatd's source
 
-<center>
-![Screenshot of Chatd](misc/screenshot.png)
-</center>
+<center>![Screenshot of Chatd](misc/screenshot.png) </center>
 
